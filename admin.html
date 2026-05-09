@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>NailMind 管理后台</title>
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+:root{
+  --bg:#0f0f0f;--surface:#1a1a1a;--card:#222;--border:#333;
+  --gold:#c8a96d;--gold2:#e6cfa0;--cream:#f4ede4;--muted:#888;
+  --green:#06c755;--red:#e05555;--blue:#4a9eff;
+}
+body{background:var(--bg);color:var(--cream);font-family:system-ui,sans-serif;font-size:14px;min-height:100vh;}
+
+/* LOGIN */
+#loginScreen{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:20px;}
+.login-box{background:var(--surface);border:1px solid var(--border);padding:40px;width:100%;max-width:360px;}
+.login-title{font-size:1.4rem;letter-spacing:0.1em;color:var(--gold2);margin-bottom:6px;}
+.login-sub{font-size:0.75rem;color:var(--muted);margin-bottom:28px;}
+.field{margin-bottom:16px;}
+.field label{display:block;font-size:0.72rem;color:var(--muted);margin-bottom:6px;letter-spacing:0.08em;}
+.field input{width:100%;padding:10px 14px;background:var(--card);border:1px solid var(--border);color:var(--cream);font-size:0.88rem;outline:none;transition:border 0.3s;}
+.field input:focus{border-color:var(--gold);}
+.btn{width:100%;padding:12px;background:var(--gold);color:#0f0f0f;font-size:0.78rem;font-weight:600;letter-spacing:0.15em;text-transform:uppercase;border:none;cursor:pointer;transition:all 0.3s;margin-top:8px;}
+.btn:hover{background:var(--gold2);}
+.btn-outline{background:transparent;color:var(--gold);border:1px solid var(--gold);}
+.btn-outline:hover{background:rgba(200,169,109,0.1);}
+.btn-red{background:var(--red);color:#fff;}
+.btn-red:hover{background:#c04444;}
+.btn-sm{width:auto;padding:7px 14px;font-size:0.68rem;}
+.err{color:var(--red);font-size:0.75rem;margin-top:8px;}
+
+/* ADMIN */
+#adminScreen{display:none;}
+.topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:14px 20px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:100;}
+.topbar-title{font-size:1rem;letter-spacing:0.1em;color:var(--gold2);}
+.topbar-right{display:flex;gap:10px;align-items:center;}
+.logout-btn{background:none;border:1px solid var(--border);color:var(--muted);padding:6px 14px;font-size:0.7rem;cursor:pointer;letter-spacing:0.1em;transition:all 0.3s;}
+.logout-btn:hover{border-color:var(--red);color:var(--red);}
+
+/* TABS */
+.tabs{display:flex;border-bottom:1px solid var(--border);background:var(--surface);overflow-x:auto;}
+.tab{padding:14px 20px;font-size:0.75rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);cursor:pointer;white-space:nowrap;border-bottom:2px solid transparent;transition:all 0.3s;}
+.tab.active{color:var(--gold);border-bottom-color:var(--gold);}
+
+.tab-content{display:none;padding:20px;}
+.tab-content.active{display:block;}
+
+/* CARDS */
+.section-title{font-size:0.85rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--gold);margin-bottom:16px;}
+.card{background:var(--surface);border:1px solid var(--border);padding:20px;margin-bottom:12px;}
+.card-row{display:flex;gap:12px;align-items:center;flex-wrap:wrap;}
+.card-thumb{width:56px;height:56px;object-fit:cover;background:var(--card);border:1px solid var(--border);flex-shrink:0;}
+.card-thumb-ph{width:56px;height:56px;display:flex;align-items:center;justify-content:center;background:var(--card);border:1px solid var(--border);color:var(--muted);font-size:1.2rem;flex-shrink:0;}
+.card-info{flex:1;min-width:0;}
+.card-name{font-size:0.88rem;margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.card-sub{font-size:0.7rem;color:var(--muted);}
+.card-actions{display:flex;gap:8px;flex-shrink:0;}
+
+/* FORM */
+.form-group{margin-bottom:14px;}
+.form-group label{display:block;font-size:0.72rem;color:var(--muted);margin-bottom:5px;letter-spacing:0.06em;}
+.form-group input,.form-group textarea,.form-group select{width:100%;padding:9px 12px;background:var(--card);border:1px solid var(--border);color:var(--cream);font-size:0.85rem;outline:none;transition:border 0.3s;resize:vertical;}
+.form-group input:focus,.form-group textarea:focus{border-color:var(--gold);}
+.form-group textarea{min-height:70px;}
+
+.upload-area{border:2px dashed var(--border);padding:24px;text-align:center;cursor:pointer;transition:all 0.3s;background:var(--card);}
+.upload-area:hover{border-color:var(--gold);background:rgba(200,169,109,0.04);}
+.upload-area input{display:none;}
+.upload-text{font-size:0.75rem;color:var(--muted);margin-top:8px;}
+.upload-icon{font-size:2rem;opacity:0.4;}
+
+.divider{border:none;border-top:1px solid var(--border);margin:20px 0;}
+
+/* PHOTO GRID */
+.photo-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:10px;margin-top:10px;}
+.photo-grid-item{position:relative;background:var(--card);border:1px solid var(--border);border-radius:2px;overflow:hidden;}
+.photo-grid-item img{width:100%;aspect-ratio:1;object-fit:cover;display:block;}
+.photo-caption-input{width:100%;padding:5px 7px;background:var(--bg);border:none;border-top:1px solid var(--border);color:var(--cream);font-size:0.68rem;outline:none;resize:none;}
+.photo-caption-input::placeholder{color:var(--muted);}
+.photo-del{position:absolute;top:3px;right:3px;background:rgba(224,85,85,0.9);color:#fff;border:none;width:20px;height:20px;font-size:0.7rem;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+
+/* CAROUSEL ITEMS */
+.carousel-item{display:flex;gap:12px;align-items:center;padding:12px;background:var(--card);border:1px solid var(--border);margin-bottom:8px;}
+.carousel-thumb{width:90px;height:60px;object-fit:cover;object-position:center;background:var(--surface);border:1px solid var(--border);flex-shrink:0;}
+.carousel-info{flex:1;min-width:0;}
+.drag-handle{cursor:grab;color:var(--muted);padding:4px;font-size:1rem;}
+
+/* TOAST */
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--green);color:#fff;padding:10px 22px;font-size:0.78rem;letter-spacing:0.1em;z-index:999;opacity:0;transition:opacity 0.3s;pointer-events:none;max-width:90vw;text-align:center;}
+.toast.show{opacity:1;}
+.toast.error{background:var(--red);}
+
+/* SPINNER */
+.spinner{display:inline-block;width:16px;height:16px;border:2px solid rgba(200,169,109,0.3);border-top-color:var(--gold);border-radius:50%;animation:spin 0.6s linear infinite;vertical-align:middle;margin-right:6px;}
+@keyframes spin{to{transform:rotate(360deg);}}
+
+/* MODAL */
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:200;align-items:center;justify-content:center;padding:20px;}
+.modal-bg.open{display:flex;}
+.modal{background:var(--surface);border:1px solid var(--border);padding:24px;width:100%;max-width:480px;max-height:90vh;overflow-y:auto;}
+.modal-title{font-size:1rem;color:var(--gold2);margin-bottom:20px;letter-spacing:0.08em;}
+.modal-actions{display:flex;gap:10px;margin-top:20px;}
+
+/* ORDER BADGE */
+.order-badge{background:var(--card);border:1px solid var(--border);color:var(--muted);font-size:0.65rem;padding:2px 8px;letter-spacing:0.1em;}
+
+@media(max-width:480px){
+  .card-actions{width:100%;}
+  .card-actions .btn{flex:1;}
+}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="loginScreen">
+  <div class="login-box">
+    <div class="login-title">NailMind</div>
+    <div class="login-sub">管理后台 · Admin Panel</div>
+    <div class="field">
+      <label>メールアドレス</label>
+      <input type="email" id="loginEmail" placeholder="your@email.com"/>
+    </div>
+    <div class="field">
+      <label>パスワード</label>
+      <input type="password" id="loginPassword" placeholder="••••••••"/>
+    </div>
+    <button class="btn" onclick="doLogin()">ログイン</button>
+    <div class="err" id="loginErr"></div>
+  </div>
+</div>
+
+<!-- ADMIN -->
+<div id="adminScreen">
+  <div class="topbar">
+    <div class="topbar-title">NailMind 管理后台</div>
+    <div class="topbar-right">
+      <a href="index.html" target="_blank" style="color:var(--muted);font-size:0.72rem;text-decoration:none;">サイト表示 →</a>
+      <button class="logout-btn" onclick="doLogout()">ログアウト</button>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <div class="tab active" onclick="switchTab('carousel')">🖼 轮播图</div>
+    <div class="tab" onclick="switchTab('services')">💅 菜单管理</div>
+    <div class="tab" onclick="switchTab('settings')">⚙️ 设置</div>
+  </div>
+
+  <!-- CAROUSEL TAB -->
+  <div class="tab-content active" id="tab-carousel">
+    <div class="section-title">轮播图管理（最多10张）</div>
+    <div id="carouselList"></div>
+    <hr class="divider"/>
+    <div class="section-title">添加新轮播图</div>
+    <div class="card">
+      <div class="form-group">
+        <label>上传图片</label>
+        <div class="upload-area" onclick="document.getElementById('carouselImgInput').click()">
+          <div class="upload-icon">📸</div>
+          <input type="file" id="carouselImgInput" accept="image/*" onchange="previewCarouselImg(this)"/>
+          <div class="upload-text" id="carouselImgLabel">タップして画像を選択</div>
+          <img id="carouselImgPreview" style="max-height:120px;margin-top:10px;display:none;"/>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>标签（小字，例：Featured / New / Popular）</label>
+        <input type="text" id="carouselLabel" placeholder="Featured"/>
+      </div>
+      <div class="form-group">
+        <label>标题（大字，例：マグネット）</label>
+        <input type="text" id="carouselTitle" placeholder="マグネット"/>
+      </div>
+      <button class="btn btn-sm" onclick="addCarouselSlide()">追加する</button>
+    </div>
+  </div>
+
+  <!-- SERVICES TAB -->
+  <div class="tab-content" id="tab-services">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+      <div class="section-title" style="margin-bottom:0">メニュー一覧</div>
+      <button class="btn btn-sm" onclick="openAddService()">＋ 新增菜单</button>
+    </div>
+    <div id="servicesList"></div>
+  </div>
+
+  <!-- SETTINGS TAB -->
+  <div class="tab-content" id="tab-settings">
+    <div class="section-title">基本设置</div>
+    <div class="card">
+      <div class="form-group">
+        <label>Logo图片</label>
+        <div class="upload-area" onclick="document.getElementById('logoInput').click()">
+          <div class="upload-icon">🖼</div>
+          <input type="file" id="logoInput" accept="image/*" onchange="previewLogo(this)"/>
+          <div class="upload-text">タップしてLogo画像を選択</div>
+          <img id="logoPreview" style="max-height:80px;margin-top:10px;display:none;"/>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>LINE予約リンク（全体共通）</label>
+        <input type="text" id="settingBookingUrl" placeholder="https://lin.ee/..."/>
+      </div>
+      <button class="btn btn-sm" onclick="saveSettings()">設定を保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- SERVICE MODAL -->
+<div class="modal-bg" id="serviceModal">
+  <div class="modal">
+    <div class="modal-title" id="serviceModalTitle">新增菜单</div>
+    <div class="form-group">
+      <label>菜单名称</label>
+      <input type="text" id="svcName" placeholder="例：マグネット"/>
+    </div>
+    <div class="form-group">
+      <label>预约链接</label>
+      <input type="text" id="svcBooking" placeholder="https://liff.line.me/..."/>
+    </div>
+    <div class="form-group">
+      <label>款式图片（可多张）</label>
+      <div class="upload-area" onclick="document.getElementById('svcPhotosInput').click()">
+        <div class="upload-icon">📷</div>
+        <input type="file" id="svcPhotosInput" accept="image/*" multiple onchange="previewSvcPhotos(this)"/>
+        <div class="upload-text">タップして画像を選択（複数可）</div>
+      </div>
+      <div class="photo-grid" id="svcPhotoPreview"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn" onclick="saveService()">保存</button>
+      <button class="btn btn-outline" onclick="closeServiceModal()">取消</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script type="module">
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+import { getFirestore, collection, getDocs, doc, setDoc, addDoc, deleteDoc, updateDoc, orderBy, query, getDoc } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+
+const firebaseConfig = {
+  apiKey: "AIzaSyAw9pjrHQB42F8a58819Eda6dypaFdo4Yc",
+  authDomain: "nailmind-9e30e.firebaseapp.com",
+  projectId: "nailmind-9e30e",
+  storageBucket: "nailmind-9e30e.firebasestorage.app",
+  messagingSenderId: "555186958654",
+  appId: "1:555186958654:web:3682988a915c3a06857c6f"
+};
+
+const CLOUDINARY_CLOUD = 'diwggesas';
+const CLOUDINARY_UPLOAD_PRESET = 'nailmind_upload';
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+// ── AUTH ──
+window.doLogin = async () => {
+  const email = document.getElementById('loginEmail').value.trim();
+  const pw = document.getElementById('loginPassword').value;
+  const err = document.getElementById('loginErr');
+  err.textContent = '';
+  try {
+    await signInWithEmailAndPassword(auth, email, pw);
+  } catch(e) {
+    err.textContent = 'メールアドレスまたはパスワードが違います';
+  }
+};
+
+window.doLogout = () => signOut(auth);
+
+onAuthStateChanged(auth, user => {
+  if (user) {
+    document.getElementById('loginScreen').style.display = 'none';
+    document.getElementById('adminScreen').style.display = 'block';
+    loadAll();
+  } else {
+    document.getElementById('loginScreen').style.display = 'flex';
+    document.getElementById('adminScreen').style.display = 'none';
+  }
+});
+
+// ── CLOUDINARY UPLOAD ──
+async function uploadToCloudinary(file) {
+  const fd = new FormData();
+  fd.append('file', file);
+  fd.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
+  fd.append('folder', 'nailmind');
+  const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD}/image/upload`, { method:'POST', body:fd });
+  if (!res.ok) throw new Error('Network error: ' + res.status);
+  const data = await res.json();
+  if (data.error) throw new Error(data.error.message);
+  if (!data.secure_url) throw new Error('No URL returned');
+  return data.secure_url;
+}
+
+// ── TOAST ──
+function toast(msg, isErr=false) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show' + (isErr?' error':'');
+  setTimeout(() => t.className='toast', 3000);
+}
+
+// ── TABS ──
+window.switchTab = (name) => {
+  document.querySelectorAll('.tab').forEach((t,i) => {
+    const names = ['carousel','services','settings'];
+    t.classList.toggle('active', names[i]===name);
+  });
+  document.querySelectorAll('.tab-content').forEach(c => {
+    c.classList.toggle('active', c.id===`tab-${name}`);
+  });
+};
+
+// ── LOAD ALL ──
+function loadAll() {
+  loadCarouselAdmin();
+  loadServicesAdmin();
+  loadSettingsAdmin();
+}
+
+// ── CAROUSEL ──
+let carouselData = [];
+async function loadCarouselAdmin() {
+  const snap = await getDocs(query(collection(db,'carousel'), orderBy('order')));
+  carouselData = [];
+  snap.forEach(d => carouselData.push({id:d.id, ...d.data()}));
+  renderCarouselAdmin();
+}
+
+function renderCarouselAdmin() {
+  const el = document.getElementById('carouselList');
+  if (carouselData.length===0) { el.innerHTML='<div style="color:var(--muted);font-size:0.8rem;padding:12px">まだ画像がありません</div>'; return; }
+  el.innerHTML = carouselData.map((s,i) => `
+    <div class="carousel-item">
+      ${s.imageUrl ? `<img class="carousel-thumb" src="${s.imageUrl}"/>` : '<div class="carousel-thumb" style="display:flex;align-items:center;justify-content:center;color:var(--muted)">◈</div>'}
+      <div class="carousel-info">
+        <div style="font-size:0.8rem">${s.title||'（タイトルなし）'}</div>
+        <div style="font-size:0.68rem;color:var(--muted);margin-top:2px">${s.label||''}</div>
+      </div>
+      <span class="order-badge">${i+1}</span>
+      <button class="btn btn-sm btn-red" onclick="deleteCarousel('${s.id}')">削除</button>
+    </div>
+  `).join('');
+}
+
+window.previewCarouselImg = (input) => {
+  const file = input.files[0];
+  if (!file) return;
+  const preview = document.getElementById('carouselImgPreview');
+  const label = document.getElementById('carouselImgLabel');
+  preview.src = URL.createObjectURL(file);
+  preview.style.display = 'block';
+  label.textContent = file.name;
+};
+
+window.addCarouselSlide = async () => {
+  if (carouselData.length >= 10) { toast('最大10枚まです', true); return; }
+  const file = document.getElementById('carouselImgInput').files[0];
+  const label = document.getElementById('carouselLabel').value.trim();
+  const title = document.getElementById('carouselTitle').value.trim();
+  if (!file) { toast('画像を選択してください', true); return; }
+  try {
+    toast('アップロード中...');
+    const imageUrl = await uploadToCloudinary(file);
+    await addDoc(collection(db,'carousel'), { imageUrl, label, title, order: carouselData.length });
+    document.getElementById('carouselImgInput').value='';
+    document.getElementById('carouselImgPreview').style.display='none';
+    document.getElementById('carouselImgLabel').textContent='タップして画像を選択';
+    document.getElementById('carouselLabel').value='';
+    document.getElementById('carouselTitle').value='';
+    toast('追加しました！');
+    loadCarouselAdmin();
+  } catch(e) { toast('エラー: ' + e.message, true); console.error(e); }
+};
+
+window.deleteCarousel = async (id) => {
+  if (!confirm('削除しますか？')) return;
+  await deleteDoc(doc(db,'carousel',id));
+  toast('削除しました');
+  loadCarouselAdmin();
+};
+
+// ── SERVICES ──
+let servicesData = [];
+let editingServiceId = null;
+let newSvcPhotoFiles = [];
+let newSvcPhotoCaptions = [];
+let existingSvcPhotos = [];
+
+async function loadServicesAdmin() {
+  const snap = await getDocs(query(collection(db,'services'), orderBy('order')));
+  servicesData = [];
+  snap.forEach(d => servicesData.push({id:d.id, ...d.data()}));
+  renderServicesAdmin();
+}
+
+function renderServicesAdmin() {
+  const el = document.getElementById('servicesList');
+  if (servicesData.length===0) { el.innerHTML='<div style="color:var(--muted);font-size:0.8rem;padding:12px">メニューがありません</div>'; return; }
+  el.innerHTML = servicesData.map((s,i) => `
+    <div class="card">
+      <div class="card-row">
+        ${s.photos&&s.photos[0] ? `<img class="card-thumb" src="${s.photos[0]}"/>` : '<div class="card-thumb-ph">◈</div>'}
+        <div class="card-info">
+          <div class="card-name">${String(i+1).padStart(2,'0')} ${s.name}</div>
+          <div class="card-sub">${s.photos?s.photos.length:0}枚の写真 · ${s.bookingUrl?'予約リンクあり':'リンクなし'}</div>
+        </div>
+        <div class="card-actions">
+          <button class="btn btn-sm btn-outline" onclick="openEditService('${s.id}')">編集</button>
+          <button class="btn btn-sm btn-red" onclick="deleteService('${s.id}')">削除</button>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+window.openAddService = () => {
+  editingServiceId = null;
+  newSvcPhotoFiles = [];
+  newSvcPhotoCaptions = [];
+  existingSvcPhotos = [];
+  document.getElementById('serviceModalTitle').textContent = '新增菜单';
+  document.getElementById('svcName').value = '';
+  document.getElementById('svcBooking').value = '';
+  document.getElementById('svcPhotoPreview').innerHTML = '';
+  document.getElementById('svcPhotosInput').value = '';
+  document.getElementById('serviceModal').classList.add('open');
+};
+
+window.openEditService = (id) => {
+  const s = servicesData.find(x=>x.id===id);
+  if (!s) return;
+  editingServiceId = id;
+  newSvcPhotoFiles = [];
+  existingSvcPhotos = (s.photos||[]).map(p => typeof p === 'object' ? p : {url:p, caption:''});
+  document.getElementById('serviceModalTitle').textContent = '编辑菜单';
+  document.getElementById('svcName').value = s.name||'';
+  document.getElementById('svcBooking').value = s.bookingUrl||'';
+  renderSvcPhotoPreview();
+  document.getElementById('serviceModal').classList.add('open');
+};
+
+window.closeServiceModal = () => {
+  document.getElementById('serviceModal').classList.remove('open');
+};
+
+window.previewSvcPhotos = (input) => {
+  const files = Array.from(input.files);
+  newSvcPhotoFiles = [...newSvcPhotoFiles, ...files];
+  newSvcPhotoCaptions = [...newSvcPhotoCaptions, ...files.map(()=>'')];
+  renderSvcPhotoPreview();
+};
+
+function renderSvcPhotoPreview() {
+  const grid = document.getElementById('svcPhotoPreview');
+  const existingHtml = existingSvcPhotos.map((photo,i) => `
+    <div class="photo-grid-item">
+      <img src="${typeof photo === 'object' ? photo.url : photo}"/>
+      <button class="photo-del" onclick="removeExistingPhoto(${i})">✕</button>
+      <textarea class="photo-caption-input" rows="2" placeholder="説明を入力（任意）" onchange="updateExistingCaption(${i}, this.value)">${typeof photo === 'object' ? (photo.caption||'') : ''}</textarea>
+    </div>
+  `).join('');
+  const newHtml = newSvcPhotoFiles.map((f,i) => `
+    <div class="photo-grid-item">
+      <img src="${URL.createObjectURL(f)}"/>
+      <button class="photo-del" onclick="removeNewPhoto(${i})">✕</button>
+      <textarea class="photo-caption-input" rows="2" placeholder="説明を入力（任意）" onchange="updateNewCaption(${i}, this.value)"></textarea>
+    </div>
+  `).join('');
+  grid.innerHTML = existingHtml + newHtml;
+}
+
+window.removeExistingPhoto = (i) => { existingSvcPhotos.splice(i,1); renderSvcPhotoPreview(); };
+window.removeNewPhoto = (i) => { newSvcPhotoFiles.splice(i,1); newSvcPhotoCaptions.splice(i,1); renderSvcPhotoPreview(); };
+window.updateExistingCaption = (i, val) => { if(typeof existingSvcPhotos[i]==='object') existingSvcPhotos[i].caption=val; else existingSvcPhotos[i]={url:existingSvcPhotos[i],caption:val}; };
+window.updateNewCaption = (i, val) => { newSvcPhotoCaptions[i] = val; };
+
+window.saveService = async () => {
+  const name = document.getElementById('svcName').value.trim();
+  const bookingUrl = document.getElementById('svcBooking').value.trim();
+  if (!name) { toast('名前を入力してください', true); return; }
+  try {
+    toast('保存中...');
+    const uploadedPhotos = [];
+    for (let idx=0; idx<newSvcPhotoFiles.length; idx++) {
+      const url = await uploadToCloudinary(newSvcPhotoFiles[idx]);
+      uploadedPhotos.push({url, caption: newSvcPhotoCaptions[idx]||''});
+    }
+    const existingNormalized = existingSvcPhotos.map(p => typeof p==='object' ? p : {url:p, caption:''});
+    const photos = [...existingNormalized, ...uploadedPhotos];
+    if (editingServiceId) {
+      await updateDoc(doc(db,'services',editingServiceId), { name, bookingUrl, photos });
+      toast('更新しました！');
+    } else {
+      await addDoc(collection(db,'services'), { name, bookingUrl, photos, order: servicesData.length });
+      toast('追加しました！');
+    }
+    closeServiceModal();
+    loadServicesAdmin();
+  } catch(e) { toast('エラー: ' + e.message, true); console.error(e); }
+};
+
+window.deleteService = async (id) => {
+  if (!confirm('このメニューを削除しますか？')) return;
+  await deleteDoc(doc(db,'services',id));
+  toast('削除しました');
+  loadServicesAdmin();
+};
+
+// ── SETTINGS ──
+async function loadSettingsAdmin() {
+  try {
+    const snap = await getDoc(doc(db,'settings','general'));
+    if (snap.exists()) {
+      const d = snap.data();
+      document.getElementById('settingBookingUrl').value = d.bookingUrl||'';
+      if (d.logoUrl) {
+        const preview = document.getElementById('logoPreview');
+        preview.src = d.logoUrl;
+        preview.style.display = 'block';
+      }
+    }
+  } catch(e) {}
+}
+
+window.previewLogo = (input) => {
+  const file = input.files[0];
+  if (!file) return;
+  const preview = document.getElementById('logoPreview');
+  preview.src = URL.createObjectURL(file);
+  preview.style.display = 'block';
+};
+
+window.saveSettings = async () => {
+  const bookingUrl = document.getElementById('settingBookingUrl').value.trim();
+  const logoFile = document.getElementById('logoInput').files[0];
+  try {
+    toast('保存中...');
+    let logoUrl = undefined;
+    if (logoFile) {
+      logoUrl = await uploadToCloudinary(logoFile);
+    }
+    const data = { bookingUrl };
+    if (logoUrl) data.logoUrl = logoUrl;
+    await setDoc(doc(db,'settings','general'), data, {merge:true});
+    toast('設定を保存しました！');
+  } catch(e) { toast('エラー: ' + e.message, true); console.error(e); }
+};
+
+// Enter key login
+document.getElementById('loginPassword').addEventListener('keydown', e => {
+  if (e.key === 'Enter') window.doLogin();
+});
+</script>
+</body>
+</html>
